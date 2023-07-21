@@ -1,8 +1,10 @@
 package aqsaka.learnspringrestfulapi.controller;
 
+import aqsaka.learnspringrestfulapi.entity.User;
 import aqsaka.learnspringrestfulapi.model.RegisterUserRequest;
 import aqsaka.learnspringrestfulapi.model.WebResponse;
 import aqsaka.learnspringrestfulapi.repository.UserRepository;
+import aqsaka.learnspringrestfulapi.security.BCrypt;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions.*;
@@ -59,6 +61,61 @@ class UserControllerTest {
                     });
 
             assertEquals("OK", response.getData());
+                }
+        );
+    }
+
+    @Test
+    void testRegisterBadRequest() throws Exception {
+        RegisterUserRequest request = new RegisterUserRequest();
+        request.setUsername("");
+        request.setPassword("");
+        request.setName("");
+
+        mockMvc.perform(
+                post("/api/users")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+        ).andExpectAll(
+                status().isBadRequest()
+        ).andDo( result -> {
+                    WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString()
+                            , new TypeReference<>() {
+                            });
+
+                    assertNotNull(response.getErrors());
+                }
+        );
+    }
+
+    @Test
+    void testRegisterDuplicate() throws Exception {
+        User user = new User();
+        user.setName("Test");
+        user.setUsername("test");
+        user.setPassword(BCrypt.hashpw("password", BCrypt.gensalt()));
+        userRepository.save(user);
+
+
+        RegisterUserRequest request = new RegisterUserRequest();
+        request.setUsername("test");
+        request.setPassword("password");
+        request.setName("Test");
+
+        mockMvc.perform(
+                post("/api/users")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+        ).andExpectAll(
+                status().isBadRequest()
+        ).andDo( result -> {
+                    WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString()
+                            , new TypeReference<>() {
+                            });
+
+                    assertNotNull(response.getErrors());
                 }
         );
     }
