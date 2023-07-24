@@ -2,6 +2,7 @@ package aqsaka.learnspringrestfulapi.service;
 
 import aqsaka.learnspringrestfulapi.entity.User;
 import aqsaka.learnspringrestfulapi.model.RegisterUserRequest;
+import aqsaka.learnspringrestfulapi.model.UserResponse;
 import aqsaka.learnspringrestfulapi.repository.UserRepository;
 import aqsaka.learnspringrestfulapi.security.BCrypt;
 import jakarta.transaction.Transactional;
@@ -43,5 +44,12 @@ public class UserService {
         user.setName(request.getName());
 
         userRepository.save(user);
+    }
+
+    public UserResponse get(User user) {
+        return UserResponse.builder()
+                .username(user.getUsername())
+                .name(user.getName())
+                .build();
     }
 }
